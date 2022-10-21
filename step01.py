@@ -4,7 +4,7 @@ import numpy as np
 
 
 class Variable:
-    def __init__(self, data):
+    def __init__(self, data):  # data : nparray
         self.data = data
 
 
@@ -15,4 +15,5 @@ print(x.data)
 x.data = np.array(2.0)
 print(x.data)
 
-y = np.array([[1,2,3], [4,5,6]])
+y = np.array([[1,2,3],
+              [4,5,6]])
