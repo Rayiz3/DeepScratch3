@@ -28,15 +28,18 @@ class Variable:
                 funcs.append(x.creator)
 
 class Function:
-    def __call__(self, inputs):  # __call__ : called when f(...) (f is an instance of the class)
+    def __call__(self, *inputs):  # __call__ : called when f(...) (f is an instance of the class)
         xs = [x.data for x in inputs]
-        ys = self.forward(xs)
+        ys = self.forward(*xs)  # unpacking : f([x0, x1]) => f(x0, x1)
+        if not isinstance(ys, tuple): ys = (ys,)  # if forward result is not a tuple
         outputs = [Variable(as_array(y)) for y in ys]  # prevented : numpy changes (0-dim ndarray) into (scalar) when it is computed
-        outputs.set_creator(self)
+        
+        for output in outputs:
+            output.set_creator(self)
         
         self.inputs = inputs
         self.outputs = outputs
-        return outputs
+        return outputs if len(outputs) > 1 else outputs[0]  # if result is (y,), just return y
     
     def forward(self, x):
         raise NotImplementedError()
@@ -62,10 +65,8 @@ class Exp(Function):
         return np.exp(x) * gy
 
 class Add(Function):
-    def forward(self, xs):
-        x0, x1 = xs
-        y = x0 + x1
-        return (y,)
+    def forward(self, x0, x1):
+        return x0 + x1
 
 # rapper functions
 def square(x):
@@ -73,6 +74,9 @@ def square(x):
 
 def exp(x):
     return Exp()(x)
+
+def add(x0, x1):
+    return Add()(x0, x1)
 
 # diff function
 def numerical_diff(f, x, eps=1e-4):
@@ -90,7 +94,7 @@ def as_array(x):
 
 
 # add : forward
-xs = [Variable(np.array(2)), Variable(np.array(3))]
-f = Add()
-y = f(xs)[0]
+x0 = Variable(np.array(2))
+x1 = Variable(np.array(3))
+y = add(x0, x1)
 print(y.data)
