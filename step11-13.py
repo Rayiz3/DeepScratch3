@@ -21,12 +21,12 @@ class Variable:
         funcs = [self.creator]
         while funcs:
             f = funcs.pop()
-            gys = [output.grad for output in f.outputs]
+            xs, ys = f.inputs, f.outputs
+            gys = [y.grad for y in ys]
             gxs = f.backward(*gys)
-            if not isinstance(gxs, tuple):
-                gxs  = (gxs,)
+            if not isinstance(gxs, tuple): gxs  = (gxs,)
             
-            for x, gx in zip(f.inputs, gxs):
+            for x, gx in zip(xs, gxs):
                 x.grad = gx
                 
                 if x.creator is not None:
