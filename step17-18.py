@@ -1,6 +1,23 @@
+from multiprocessing.sharedctypes import Value
 import numpy as np
 import weakref
+import contextlib
 
+class Config:  # for mode switching
+    enable_backprop = True
+
+@contextlib.contextmanager  # provide context : preprocessing ~ yield ~ postprocessing
+def using_config(name, value):
+    # preprocessing
+    old_value = getattr(Config, name)  # old_value = Config.name
+    setattr(Config, name, value)  # Config.name = value
+    # preprocessing
+    try:
+        yield  # similar with return, but yield whenever it is called
+    finally:
+    # postprocessing
+        setattr(Config, name, old_value)  # Config.name = old_value
+    # postprocessing
 
 class Variable:
     def __init__(self, data):
@@ -17,7 +34,7 @@ class Variable:
         self.creator = func
         self.generation = func.generation + 1
     
-    def backward(self):
+    def backward(self, retain_grad=False):
         if self.grad is None: # if terminal variable (loss fuction value)
             self.grad = np.ones_like(self.data) # default grad = 1s (with same DT with self.data)
         
@@ -47,6 +64,10 @@ class Variable:
                 
                 if x.creator is not None:
                     add_func(x.creator)
+                    
+            if not retain_grad: # remove unecessary grad variable
+                for y in ys:
+                    y.grad = None
     
     def cleargrad(self):
         self.grad = None
@@ -59,12 +80,14 @@ class Function:
         if not isinstance(ys, tuple): ys = (ys,)  # if forward result is not a tuple
         outputs = [Variable(as_array(y)) for y in ys]  # prevented : numpy changes (0-dim ndarray) into (scalar) when it is computed
         
-        self.generation = max([x.generation for x in inputs])
-        for output in outputs:
-            output.set_creator(self)
+        if Config.enable_backprop:  # all for backpropagation
+            self.generation = max([x.generation for x in inputs])
+            for output in outputs:
+                output.set_creator(self)
+            
+            self.inputs = inputs
+            self.outputs = [weakref.ref(output) for output in outputs]  # prevented : circular reference
         
-        self.inputs = inputs
-        self.outputs = [weakref.ref(output) for output in outputs]  # prevented : circular reference
         return outputs if len(outputs) > 1 else outputs[0]  # if result is (y,), just return y
     
     def forward(self, xs):
@@ -107,6 +130,9 @@ def exp(x):
 def add(x0, x1):
     return Add()(x0, x1)
 
+def no_grad():
+    return using_config('enable_backprop', False)
+
 # diff function
 def numerical_diff(f, x, eps=1e-4):
     x0 = Variable(x.data - eps)
@@ -125,3 +151,29 @@ def as_array(x):
 for i in range(10):
     x = Variable(np.random.randn(10000))
     y = square(square(square(x)))
+
+# backward memory management
+x0 = Variable(np.array(1.0))
+x1 = Variable(np.array(1.0))
+t = add(x0, x1)
+y = add(x0, t)
+y.backward()
+
+print(y.grad, t.grad)
+print(x0.grad, x1.grad)
+
+# mode switching
+Config.enable_backprop = True
+x = Variable(np.ones((100, 100, 100)))
+y = square(square(square(x)))
+y.backward()
+
+Config.enable_backprop = False
+x = Variable(np.ones((100, 100, 100)))
+y = square(square(square(x)))
+
+# mode switching with contextlib
+with no_grad(): # preprocessing start
+    x = Variable(np.array(2.0))
+    y = square(x)
+    # block ended; postprocessing start
