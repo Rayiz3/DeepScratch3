@@ -1,4 +1,6 @@
+from statistics import variance
 import numpy as np
+import weakref
 
 
 class Variable:
@@ -33,7 +35,7 @@ class Variable:
         
         while funcs:
             f = funcs.pop()
-            xs, ys = f.inputs, f.outputs
+            xs, ys = f.inputs, [output() for output in f.outputs]
             gys = [y.grad for y in ys]
             gxs = f.backward(*gys)
             if not isinstance(gxs, tuple): gxs  = (gxs,)
@@ -63,7 +65,7 @@ class Function:
             output.set_creator(self)
         
         self.inputs = inputs
-        self.outputs = outputs
+        self.outputs = [weakref.ref(output) for output in outputs]  # prevented : circular reference
         return outputs if len(outputs) > 1 else outputs[0]  # if result is (y,), just return y
     
     def forward(self, xs):
@@ -119,3 +121,8 @@ def as_array(x):
     if np.isscalar(x):
         return np.array(x)
     return x
+
+
+for i in range(10):
+    x = Variable(np.random.randn(10000))
+    y = square(square(square(x)))
