@@ -1,4 +1,3 @@
-from statistics import variance
 import numpy as np
 import weakref
 
