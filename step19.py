@@ -20,15 +20,25 @@ def using_config(name, value):
     # postprocessing
 
 class Variable:
-    def __init__(self, data):
+    def __init__(self, data, name=None):
         # exception flow
         if (data is not None) and (not isinstance(data, np.ndarray)):
             raise TypeError("type {} is not supported.".format(type(data)))
         
         self.data = data
+        self.name = name
         self.grad = None
         self.creator = None
         self.generation = 0
+    
+    def __len__(self):  # len()
+        return len(self.data)
+    
+    def __repr__(self):  # print()
+        if self.data is None:
+            return 'variable(None)'
+        p = str(self.data).replace('/n', '/n' + ' ' * 9)
+        return 'variable(' + p + ')'
     
     def set_creator(self, func):
         self.creator = func
@@ -71,6 +81,22 @@ class Variable:
     
     def cleargrad(self):
         self.grad = None
+    
+    @property  # can use fuction as variable : x.shape
+    def shape(self):
+        return self.data.shape
+    
+    @property
+    def ndim(self):
+        return self.data.ndim
+    
+    @property
+    def size(self):
+        return self.data.size
+    
+    @property
+    def dtype(self):
+        return self.data.dtype
             
 
 class Function:
@@ -147,7 +173,9 @@ def as_array(x):
         return np.array(x)
     return x
 
-
-for i in range(10):
-    x = Variable(np.random.randn(10000))
-    y = square(square(square(x)))
+x = Variable(np.array([[1,2,3],
+                       [4,5,6]]))
+print("x.shape :", x.shape)
+print("x.ndim :", x.ndim)
+print("x.size :", x.size)
+print("x.dtype :", x.dtype)
