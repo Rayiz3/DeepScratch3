@@ -134,7 +134,6 @@ class Square(Function):
         x = self.inputs[0].data  # *inputs serves variable as tuple : (x,)
         return 2 * x * gy
 
-
 class Exp(Function):
     def forward(self, x):
         return np.exp(x)
@@ -143,12 +142,26 @@ class Exp(Function):
         x = self.inputs[0].data
         return np.exp(x) * gy
 
+class Neg(Function):
+    def forward(self, x):
+        return -x
+    
+    def backward(self, gy):
+        return -gy
+
 class Add(Function):
     def forward(self, x0, x1):
         return x0 + x1
     
     def backward(self, gy):
         return gy, gy
+
+class Sub(Function):
+    def forward(self, x0, x1):
+        return x0 - x1
+    
+    def backward(self, gy):
+        return gy, -gy
     
 class Mul(Function):
     def forward(self, x0, x1):
@@ -157,6 +170,26 @@ class Mul(Function):
     def backward(self, gy):
         x0, x1 = self.inputs[0].data, self.inputs[1].data
         return gy * x1, gy * x0
+    
+class Div(Function):
+    def forward(self, x0, x1):
+        return x0 / x1
+    
+    def backward(self, gy):
+        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        return gy / x1, gy * (-x0 / x1 ** 2)
+    
+class Pow(Function):
+    def __init__(self, c):
+        self.c = c
+         
+    def forward(self, x):
+        return x ** self.c
+    
+    def backward(self, gy):
+        x = self.inputs[0].data
+        c = self.c
+        return c * x ** (c - 1) * gy
 
 
 # rapper functions
@@ -166,15 +199,37 @@ def square(x):
 def exp(x):
     return Exp()(x)
 
+def neg(x):
+    return Neg()(x)
+
 def add(x0, x1):
     x1 = as_array(x1)
     return Add()(x0, x1)
+
+def sub(x0, x1):
+    x1 = as_array(x1)
+    return Sub()(x0, x1)
+
+def rsub(x0, x1):
+    x1 = as_array(x1)
+    return Sub()(x1, x0)
 
 def mul(x0, x1):
     x1 = as_array(x1)
     return Mul()(x0, x1)
 
+def div(x0, x1):
+    x1 = as_array(x1)
+    return Div()(x0, x1)
 
+def rdiv(x0, x1):
+    x1 = as_array(x1)
+    return Div()(x1, x0)
+
+def pow(x, c):
+    return Pow(c)(x)
+
+# mode switching
 def no_grad():
     return using_config('enable_backprop', False)
 
@@ -199,10 +254,16 @@ def as_variable(obj):
     return Variable(obj)
 
 # operator overloading
+Variable.__neg__ = neg
 Variable.__add__ = add
-Variable.__mul__ = mul
 Variable.__radd__ = add
+Variable.__sub__ = sub
+Variable.__rsub__ = rsub
+Variable.__mul__ = mul
 Variable.__rmul__ = mul
+Variable.__div__ = div
+Variable.__rdiv__ = rdiv
+Variable.__pow__ = pow
 
 
 a = Variable(np.array(2.0))
@@ -214,3 +275,10 @@ print(d.data)
 e = Variable(np.array(2.0))
 f = 3.0 * e + np.array(1.0)
 print(f.data)
+
+g = -a
+h = 2.0 - a
+i = a ** 3
+print(g.data)
+print(h.data)
+print(i.data)
