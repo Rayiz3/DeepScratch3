@@ -1,3 +1,4 @@
+from re import A
 import numpy as np
 import weakref
 import contextlib
@@ -144,6 +145,15 @@ class Add(Function):
     
     def backward(self, gy):
         return gy, gy
+    
+class Mul(Function):
+    def forward(self, x0, x1):
+        return x0 * x1
+    
+    def backward(self, gy):
+        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        return gy * x1, gy * x0
+
 
 # rapper functions
 def square(x):
@@ -154,6 +164,10 @@ def exp(x):
 
 def add(x0, x1):
     return Add()(x0, x1)
+
+def mul(x0, x1):
+    return Mul()(x0, x1)
+
 
 def no_grad():
     return using_config('enable_backprop', False)
@@ -171,3 +185,18 @@ def as_array(x):
     if np.isscalar(x):
         return np.array(x)
     return x
+
+# operator overloading
+Variable.__add__ = add
+Variable.__mul__ = mul
+
+
+a = Variable(np.array(2.0))
+b = Variable(np.array(3.0))
+c = Variable(np.array(4.0))
+
+y = a * b + c
+y.backward()
+print(y.data)
+print(a.grad)
+print(b.grad)
