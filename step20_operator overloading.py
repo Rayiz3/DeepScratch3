@@ -20,6 +20,8 @@ def using_config(name, value):
     # postprocessing
 
 class Variable:
+    __array_priority__ = 200  # prevented : for operation with (ndarray * Variable), ndarray.__mul__ is applied at first
+    
     def __init__(self, data, name=None):
         # exception flow
         if (data is not None) and (not isinstance(data, np.ndarray)):
@@ -101,6 +103,8 @@ class Variable:
 
 class Function:
     def __call__(self, *inputs):  # __call__ : called when f(...) (f is an instance of the class)
+        inputs = [as_variable(x) for x in inputs] # to make (ndarray * Variable) operation available
+        
         xs = [x.data for x in inputs]
         ys = self.forward(*xs)  # unpacking : f([x0, x1]) => f(x0, x1)
         if not isinstance(ys, tuple): ys = (ys,)  # if forward result is not a tuple
@@ -163,9 +167,11 @@ def exp(x):
     return Exp()(x)
 
 def add(x0, x1):
+    x1 = as_array(x1)
     return Add()(x0, x1)
 
 def mul(x0, x1):
+    x1 = as_array(x1)
     return Mul()(x0, x1)
 
 
@@ -186,17 +192,25 @@ def as_array(x):
         return np.array(x)
     return x
 
+# change (othertype) => (Variable)
+def as_variable(obj):
+    if isinstance(obj, Variable):
+        return obj
+    return Variable(obj)
+
 # operator overloading
 Variable.__add__ = add
 Variable.__mul__ = mul
+Variable.__radd__ = add
+Variable.__rmul__ = mul
 
 
 a = Variable(np.array(2.0))
 b = Variable(np.array(3.0))
 c = Variable(np.array(4.0))
+d = a * b + c
+print(d.data)
 
-y = a * b + c
-y.backward()
-print(y.data)
-print(a.grad)
-print(b.grad)
+e = Variable(np.array(2.0))
+f = 3.0 * e + np.array(1.0)
+print(f.data)
