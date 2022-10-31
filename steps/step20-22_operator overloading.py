@@ -1,4 +1,3 @@
-from re import A
 import numpy as np
 import weakref
 import contextlib
@@ -261,8 +260,8 @@ Variable.__sub__ = sub
 Variable.__rsub__ = rsub
 Variable.__mul__ = mul
 Variable.__rmul__ = mul
-Variable.__div__ = div
-Variable.__rdiv__ = rdiv
+Variable.__truediv__ = div
+Variable.__rtruediv__ = rdiv
 Variable.__pow__ = pow
 
 
