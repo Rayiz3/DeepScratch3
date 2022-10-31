@@ -229,3 +229,15 @@ def as_variable(obj):
     if isinstance(obj, Variable):
         return obj
     return Variable(obj)
+
+def setup_variable():
+    Variable.__neg__ = neg
+    Variable.__add__ = add
+    Variable.__radd__ = add
+    Variable.__sub__ = sub
+    Variable.__rsub__ = rsub
+    Variable.__mul__ = mul
+    Variable.__rmul__ = mul
+    Variable.__truediv__ = div
+    Variable.__rtruediv__ = rdiv
+    Variable.__pow__ = pow
