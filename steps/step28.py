@@ -8,12 +8,23 @@ from dezero import Function
 from dezero import Variable
 
 
-# taylor series approximation
-def my_sin(x, threshold=0.0001):
-    y = 0 
-    for i in range(100000):
-        c = (-1)**i * x**(2 * i + 1) / math.factorial(2 * i + 1)
-        y = y + c
-        if abs(c.data) < threshold:
-            break
-    return y
+def rosenbrock(x0, x1):
+    return 100 * (x1 - x0 ** 2) ** 2 + (1 - x0) ** 2
+
+
+x0 = Variable(np.array(0.0))
+x1 = Variable(np.array(2.0))
+lr = 0.001
+iters = 1000
+
+# gradient descent
+for i in range(iters):
+    print(x0, x1)
+    
+    y = rosenbrock(x0, x1)
+    x0.cleargrad()
+    x1.cleargrad()
+    y.backward()
+    
+    x0.data -= lr * x0.grad
+    x1.data -= lr * x1.grad
