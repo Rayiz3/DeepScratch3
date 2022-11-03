@@ -111,9 +111,10 @@ class Function:
         
         if Config.enable_backprop:  # all for backpropagation
             self.generation = max([x.generation for x in inputs])
+            
+            # make relation
             for output in outputs:
                 output.set_creator(self)
-            
             self.inputs = inputs
             self.outputs = [weakref.ref(output) for output in outputs]  # prevented : circular reference
         
