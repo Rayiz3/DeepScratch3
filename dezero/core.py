@@ -45,9 +45,9 @@ class Variable:
         self.creator = func
         self.generation = func.generation + 1
     
-    def backward(self, retain_grad=False):
+    def backward(self, retain_grad=False, create_graph=False):  # create_graph=False : do backpropagation only 'once'
         if self.grad is None: # if terminal variable (loss fuction value)
-            self.grad = np.ones_like(self.data) # default grad = 1s (with same DT with self.data)
+            self.grad = Variable(np.ones_like(self.data)) # default grad = 1s (with same DT with self.data)
         
         funcs = []
         seen_set = set()
@@ -64,17 +64,19 @@ class Variable:
             f = funcs.pop()
             xs, ys = f.inputs, [output() for output in f.outputs]
             gys = [y.grad for y in ys]
-            gxs = f.backward(*gys)
-            if not isinstance(gxs, tuple): gxs  = (gxs,)
             
-            for x, gx in zip(xs, gxs):
-                if x.grad is None:
-                    x.grad = gx
-                else:
-                    x.grad = x.grad + gx  # if using += : become *(x.grad) == *(y.grad)
-                
-                if x.creator is not None:
-                    add_func(x.creator)
+            with using_config('enable_backprop', create_graph):  # mode switching inside function
+                gxs = f.backward(*gys)
+                if not isinstance(gxs, tuple): gxs  = (gxs,)
+            
+                for x, gx in zip(xs, gxs):
+                    if x.grad is None:
+                        x.grad = gx
+                    else:
+                        x.grad = x.grad + gx  # if using += : become *(x.grad) == *(y.grad)
+                    
+                    if x.creator is not None:
+                        add_func(x.creator)
                     
             if not retain_grad: # remove unecessary grad variable
                 for y in ys:
@@ -152,7 +154,7 @@ class Mul(Function):
         return x0 * x1
     
     def backward(self, gy):
-        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        x0, x1 = self.inputs
         return gy * x1, gy * x0
     
 class Div(Function):
@@ -160,7 +162,7 @@ class Div(Function):
         return x0 / x1
     
     def backward(self, gy):
-        x0, x1 = self.inputs[0].data, self.inputs[1].data
+        x0, x1 = self.inputs
         return gy / x1, gy * (-x0 / x1 ** 2)
     
 class Pow(Function):
@@ -171,7 +173,7 @@ class Pow(Function):
         return x ** self.c
     
     def backward(self, gy):
-        x = self.inputs[0].data
+        x = self.inputs[0]
         c = self.c
         return c * x ** (c - 1) * gy
 
