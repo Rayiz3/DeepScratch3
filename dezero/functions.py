@@ -17,6 +17,15 @@ class Cos(Function):
     def backward(self, gy):
         x, = self.inputs
         return gy * -sin(x)
+    
+class Tanh(Function):
+    def forward(self, x):
+        return np.tanh(x)
+    
+    def backward(self, gy):
+        x, = self.inputs
+        return gy * (1 - tanh(x) ** 2)
+
 
 def sin(x):
     return Sin()(x)
@@ -24,4 +33,5 @@ def sin(x):
 def cos(x):
     return Cos()(x)
 
-
+def tanh(x):
+    return Tanh()(x)
