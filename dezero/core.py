@@ -1,6 +1,7 @@
 import numpy as np
 import weakref
 import contextlib
+import dezero
 
 class Config:  # for mode switching
     enable_backprop = True
@@ -84,6 +85,14 @@ class Variable:
     
     def cleargrad(self):
         self.grad = None
+        
+    def reshape(self, *shape):
+        if len(shape) == 1 and isinstance(shape[0], (tuple, list)):  # if get parameters by list or tuple
+            shape = shape[0]
+        return dezero.functions.reshape(self, shape)  # to avoid circular import of functions module
+    
+    def transpose(self):
+        return dezero.functions.transpose(self)  # to avoid circular import of functions module
     
     @property  # can use fuction as variable : x.shape
     def shape(self):
@@ -100,7 +109,10 @@ class Variable:
     @property
     def dtype(self):
         return self.data.dtype
-            
+
+    @property
+    def T(self):
+        return dezero.functions.transpose(self)  # to avoid circular import of functions module
 
 class Function:
     def __call__(self, *inputs):  # __call__ : called when f(...) (f is an instance of the class)
