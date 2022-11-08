@@ -94,6 +94,9 @@ class Variable:
     def transpose(self):
         return dezero.functions.transpose(self)  # to avoid circular import of functions module
     
+    def sum(self, axis=None, keepdims=False):
+        return dezero.functions.sum(self, axis, keepdims)  # to avoid circular import of functions module
+    
     @property  # can use fuction as variable : x.shape
     def shape(self):
         return self.data.shape
