@@ -13,6 +13,6 @@ y.backward(retain_grad=True)
 print(x.grad)
 
 x.cleargrad()
-z = x.transpose()
-z.backward(retain_brad=True)
+z = F.transpose(x)
+z.backward(retain_grad=True)
 print(x.grad)
