@@ -86,12 +86,12 @@ def reshape_sum_backward(gy, x_shape, axis, keepdims):
     elif not isinstance(axis, tuple):
         tupled_axis = (axis,)
 
-    if not (ndim == 0 or tupled_axis is None or keepdims):
-        actual_axis = [a if a >= 0 else a + ndim for a in tupled_axis]
+    if not (ndim == 0 or tupled_axis is None or keepdims):  # (ndim > 0) and (tupled_axis) and (not keepdims)  e.g.) [[1,2,3], [4,5,6]] => [5,7,9]
+        actual_axis = [a if a >= 0 else a + ndim for a in tupled_axis]  # ring  e.g.) for ndim=4, if a = -1 => index 3
         shape = list(gy.shape)
         for a in sorted(actual_axis):
-            shape.insert(a, 1)
-    else:
+            shape.insert(a, 1)  # insert 1 in index a
+    else:  # e.g.) [[1,2,3], [4,5,6]] => [[21]]
         shape = gy.shape
 
     gy = gy.reshape(shape)  # reshape
