@@ -43,7 +43,7 @@ class Transpose(Function):
         self.axes = axes
     
     def forward(self, x):
-        return np.Transpose(self.axes)
+        return np.transpose(x, self.axes)
     
     def backward(self, gy):
         if self.axes is None:
@@ -60,7 +60,7 @@ class Sum(Function):
         
     def forward(self, x):
         self.x_shape = x.shape
-        return x.sum(axis=self.axis, keepdims=self.keepdims)
+        return np.sum(x, axis=self.axis, keepdims=self.keepdims)
     
     def backward(self, gy):
         gy = utils.reshape_sum_backward(gy, self.x_shape, self.axis, self.keepdims)
