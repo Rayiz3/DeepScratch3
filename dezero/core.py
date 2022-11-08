@@ -152,9 +152,14 @@ class Neg(Function):
 
 class Add(Function):
     def forward(self, x0, x1):
+        self.x0_shape, self.x1_shape = x0.shape, x1.shape
         return x0 + x1
     
     def backward(self, gy):
+        if self.x0_shape != self.x1_shape:
+            g0 = dezero.functions.sum_to(gy, self.x0_shape)
+            g1 = dezero.functions.sum_to(gy, self.x1_shape)
+            return g0, g1
         return gy, gy
 
 class Sub(Function):
