@@ -95,6 +95,17 @@ class Matmul(Function):
     def backward(self, gy):
         x, W = self.inputs
         return matmul(gy, W.T), matmul(x.T, gy)
+    
+class MeanSquaredError(Function):
+    def forward(self, x0, x1):
+        diff = x0 - x1
+        return (diff ** 2).sum() / len(diff)
+    
+    def backward(self, gy):
+        x0, x1 = self.inputs
+        diff = x0 - x1
+        gx = gy * (2. / len(diff)) * diff
+        return gx, -gx
 
 
 def sin(x):
@@ -129,3 +140,6 @@ def sum_to(x, shape):
 
 def matmul(x, W):
     return Matmul()(x, W)
+
+def mean_squared_error(x0, x1):
+    return MeanSquaredError()(x0, x1)
