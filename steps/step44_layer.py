@@ -5,6 +5,7 @@ if '__file__' in globals():
 import numpy as np
 from dezero import Variable
 import dezero.functions as F
+import dezero.layers as L
 
 
 # toy dataset
@@ -13,16 +14,13 @@ x = np.random.rand(100, 1)
 y = np.sin(2 * np.pi * x) + np.random.rand(100, 1)
 
 # initialization
-I, H, O = 1, 10, 1
-W1 = Variable(0.01 * np.random.randn(I, H))  # I * H matrix
-b1 = Variable(np.zeros(H))  # H * 1
-W2 = Variable(0.01 * np.random.randn(H, O))  # H * O matrix
-b2 = Variable(np.zeros(O))  # O * 1
+l1 = L.Linear(10)
+l2 = L.Linear(1)
 
 def predict(x):
-    y = F.linear(x, W1, b1)
+    y = l1(x)
     y = F.sigmoid(y)
-    y = F.linear(y, W2, b2)
+    y = l2(y)
     return y
 
 
@@ -34,17 +32,14 @@ for i in range(iters):
     loss = F.mean_squared_error(y_pred, y)
     
     # backpropagation
-    W1.cleargrad()
-    b1.cleargrad()
-    W2.cleargrad()
-    b2.cleargrad()
+    l1.cleargrads()
+    l2.cleargrads()
     loss.backward()
     
     # gradient descent
-    W1.data -= lr * W1.grad.data
-    b1.data -= lr * b1.grad.data
-    W2.data -= lr * W2.grad.data
-    b2.data -= lr * b2.grad.data
+    for l in [l1, l2]:
+        for p in l.params():
+            p.data -= lr * p.grad.data
     
     if i % 1000 == 0:
         print(loss)
