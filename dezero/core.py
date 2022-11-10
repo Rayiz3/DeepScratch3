@@ -117,6 +117,9 @@ class Variable:
     def T(self):
         return dezero.functions.transpose(self)  # to avoid circular import of functions module
 
+class Parameter(Variable):
+    pass
+
 class Function:
     def __call__(self, *inputs):  # __call__ : called when f(...) (f is an instance of the class)
         inputs = [as_variable(x) for x in inputs] # to make (ndarray * Variable) operation available
