@@ -3,9 +3,9 @@ if '__file__' in globals():
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # to find 'dezero' directory wherever execute a .py file
 
 import numpy as np
-from dezero import Variable, Model
+from dezero import Variable, optimizers
 import dezero.functions as F
-import dezero.layers as L
+from dezero.models import MLP
 
 
 # toy dataset
@@ -19,17 +19,8 @@ iters = 10000
 hidden_size = 10
 
 # initialization
-class TwoLayerNet(Model):
-    def __init__(self, hidden_size, out_size):
-        super().__init__()
-        self.l1 = L.Linear(hidden_size)
-        self.l2 = L.Linear(out_size)
-        
-    def forward(self, x):
-        return self.l2(F.sigmoid(self.l1(x)))
-
-
-model = TwoLayerNet(hidden_size, 1)
+model = MLP((hidden_size, 1))
+optimizer = optimizers.SGD(lr).setup(model)
 
 for i in range(iters):
     y_pred = model(x)
@@ -40,8 +31,7 @@ for i in range(iters):
     loss.backward()
     
     # gradient descent
-    for p in model.params():
-        p.data -= lr * p.grad.data
+    optimizer.update()
     
     if i % 1000 == 0:
         print(loss)
