@@ -4,7 +4,7 @@ class Optimizer:
         self.hooks = []
     
     def setup(self, target):
-        selg.target = target
+        self.target = target
         return self
     
     def update(self):
