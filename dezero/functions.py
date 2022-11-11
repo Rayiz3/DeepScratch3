@@ -60,6 +60,31 @@ class Transpose(Function):
         inv_axes = tuple(np.argsort([ax % axes_len for ax in self.axes]))  # argsort : list of index that makes the list sequential(increase)
         return transpose(gy, inv_axes)
 
+class GetItem(Function):
+    def __init__(self, slices):
+        self.slices = slices
+
+    def forward(self, x):
+        self.x_shape = x.shape
+        y = x[self.slices]
+        return y
+
+    def backward(self, gy):
+        return get_item_grad(gy, self.slices, self.x_shape)
+    
+class GetItemGrad(Function):
+    def __init__(self, slices, in_shape):
+        self.slices = slices
+        self.in_shape = in_shape
+
+    def forward(self, x):
+        y = np.zeros(self.in_shape)
+        np.add.at(y, self.slices, x)  # add.at : add 'slices - index of x' to y
+        return y
+
+    def backward(self, gy):
+        return get_item(gy, self.slices)
+
 # =====================
 # Matrix operation
 # =====================
@@ -166,6 +191,12 @@ def reshape(x, shape):
 
 def transpose(x, axes=None):
     return Transpose(axes)(x)
+
+def get_item(x, slices):
+    return GetItem(slices)(x)
+
+def get_item_grad(x, slices, in_shape):
+    return GetItemGrad(slices, in_shape)(x)
 
 def sum(x, axis=None, keepdims=False):
     return Sum(axis, keepdims)(x)
