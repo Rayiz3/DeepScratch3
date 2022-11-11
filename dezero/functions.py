@@ -3,6 +3,10 @@ import dezero
 from dezero import utils
 from dezero.core import Function, as_variable
 
+
+# =====================
+# Basic function
+# =====================
 class Sin(Function):
     def forward(self, x):
         return np.sin(x)
@@ -26,7 +30,10 @@ class Tanh(Function):
     def backward(self, gy):
         x, = self.inputs
         return gy * (1 - tanh(x) ** 2)
-
+    
+# =====================
+# Matrix topology
+# =====================
 class Reshape(Function):
     def __init__(self, shape):
         self.shape = shape
@@ -53,6 +60,9 @@ class Transpose(Function):
         inv_axes = tuple(np.argsort([ax % axes_len for ax in self.axes]))  # argsort : list of index that makes the list sequential(increase)
         return transpose(gy, inv_axes)
 
+# =====================
+# Matrix operation
+# =====================
 class Sum(Function):
     def __init__(self, axis, keepdims):
         self.axis = axis  # index where going to sum  e.g.) axis=1 : sum(x[][i][]...)
@@ -95,17 +105,6 @@ class Matmul(Function):
     def backward(self, gy):
         x, W = self.inputs
         return matmul(gy, W.T), matmul(x.T, gy)
-    
-class MeanSquaredError(Function):
-    def forward(self, x0, x1):
-        diff = x0 - x1
-        return (diff ** 2).sum() / len(diff)
-    
-    def backward(self, gy):
-        x0, x1 = self.inputs
-        diff = x0 - x1
-        gx = gy * (2. / len(diff)) * diff
-        return gx, -gx
 
 class Linear(Function):
     def forward(self, x, W, b):
@@ -121,6 +120,23 @@ class Linear(Function):
         gW = matmul(x.T, gy)
         return gx, gW, gb
 
+# =====================
+# Loss function
+# =====================
+class MeanSquaredError(Function):
+    def forward(self, x0, x1):
+        diff = x0 - x1
+        return (diff ** 2).sum() / len(diff)
+    
+    def backward(self, gy):
+        x0, x1 = self.inputs
+        diff = x0 - x1
+        gx = gy * (2. / len(diff)) * diff
+        return gx, -gx
+
+# =====================
+# Activation function
+# =====================
 class Sigmoid(Function):
     def forward(self, x):
         # xp = cuda.get_array_module(x)
@@ -133,6 +149,7 @@ class Sigmoid(Function):
         return gx
 
 
+# rapper functions #
 def sin(x):
     return Sin()(x)
 
