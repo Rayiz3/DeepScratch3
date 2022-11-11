@@ -20,3 +20,8 @@ class MLP(Model):  # for n - layer affine model
             layer = L.Linear(out_size)
             setattr(self, 'l' + str(i), layer)  # self.ln = layer
             self.layers.append(layer)
+    
+    def forward(self, x):
+        for l in self.layers[:-1]:  # the last layer is output layer - no activation
+            x = self.activation(l(x))
+        return self.layers[-1](x)
