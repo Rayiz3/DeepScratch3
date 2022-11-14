@@ -21,5 +21,6 @@ else:
     
     import dezero.functions
     import dezero.utils
+    import dezero.datasets
 
 setup_variable()
