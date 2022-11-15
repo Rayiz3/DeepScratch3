@@ -1,7 +1,7 @@
 import numpy as np
 import dezero
 from dezero import utils
-from dezero.core import Function, as_variable
+from dezero.core import Function, as_variable, as_array
 
 
 # =====================
@@ -336,4 +336,4 @@ def accuracy(y, t):
     pred = y.data.argmax(axis=1).reshape(t.shape)
     result = (pred == t.data)
     acc = result.mean()
-    return Variable(as_array(acc))
+    return as_variable(as_array(acc))
