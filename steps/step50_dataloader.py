@@ -8,6 +8,8 @@ import dezero
 import dezero.functions as F
 from dezero import optimizers
 from dezero import transforms
+from dezero import DataLoader
+from dezero.datasets import Spiral
 from dezero.models import MLP
 
 # normalize
@@ -29,26 +31,29 @@ hidden_size = 10
 lr = 1.0
 
 # initilization
-train_set = dezero.datasets.Spiral()  # (300, 2) / (300,)
+train_set = Spiral(train=True)  # (300, 2) / (300,)
+test_set = Spiral(train=False)  # (300, 2) / (300,)
+train_loader = DataLoader(train_set, batch_size)
+test_loader = DataLoader(test_set, batch_size, shuffle=False)
+
 model = MLP((hidden_size, 3))
 optimizer = optimizers.SGD(lr).setup(model)
 data_size = len(x)  # 300
 max_iter = math.ceil(data_size / batch_size) # 300 / 30 = 10
 
 for epoch in range(max_epoch):
+    print('epoch: {}'.format(epoch+1))
+    
+    ## train section ##
     index = np.random.permutation(data_size)  # shuffle
-    sum_loss = 0
+    sum_loss, sum_acc = 0, 0
     
     # dataset iteration(300)
-    for i in range(max_iter):
-        batch_index = index[i * batch_size:(i + 1) * batch_size]  # 'batch_size' data
-        batch = [train_set[i] for i in batch_index]
-        batch_x = np.array([element[0] for element in batch])
-        batch_t = np.array([element[1] for element in batch])
-    
+    for x, t in train_loader:
         # forward
-        y = model(batch_x)
-        loss = F.softmax_cross_entropy(y, batch_t)
+        y = model(x)
+        loss = F.softmax_cross_entropy(y, t)
+        acc = F.accuracy(y, t)
         
         # backward
         model.cleargrads()
@@ -56,7 +61,27 @@ for epoch in range(max_epoch):
         
         # updated
         optimizer.update()
-        sum_loss += float(loss.data) * len(batch_t)
+        sum_loss += float(loss.data) * len(t)
+        sum_acc += float(acc.data) * len(t)
     
-    avg_loss = sum_loss / data_size
-    print('epoch %d, loss %.5f' % (epoch+1, avg_loss))
+    avg_loss = sum_loss / len(train_set)
+    avg_acc = sum_acc / len(train_set)
+    print('train loss: {:.4f}, accuracy: {:.4f}'.format(avg_loss, avg_acc))
+    
+    ## test section ##
+    sum_loss, sum_acc = 0, 0
+    
+    with dezero.no_grad():
+        for x, t in test_loader:
+            # forward
+            y = model(x)
+            loss = F.softmax_cross_entropy(y, t)
+            acc = F.accuracy(y, t)
+            
+            # update
+            sum_loss += float(loss.data) * len(t)
+            sum_acc += float(acc.data) * len(t)
+        
+        avg_loss = sum_loss / len(test_set)
+        avg_acc = sum_acc / len(test_set)
+        print('train loss: {:.4f}, accuracy: {:.4f}'.format(avg_loss, avg_acc))
