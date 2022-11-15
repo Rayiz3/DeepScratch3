@@ -2,14 +2,17 @@ if '__file__' in globals():
     import os, sys
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # to find 'dezero' directory wherever execute a .py file
 
-import numpy
+import math
+import numpy as np
 import dezero
 import dezero.functions as F
 from dezero import optimizers
+from dezero import transforms
 from dezero.models import MLP
 
-
-train_set = dezero.datasets.Spiral(train=True)
+# normalize
+n = transforms.Normalize(mean=0.0, std=2.0)
+train_set = dezero.datasets.Spiral(train=True, transform=n)
 print(train_set[0], len(train_set))
 
 # take mini batch
@@ -26,7 +29,7 @@ hidden_size = 10
 lr = 1.0
 
 # initilization
-x, t = dezero.datasets.get_spiral(train=True)  # (300, 2) / (300,)
+train_set = dezero.datasets.Spiral()  # (300, 2) / (300,)
 model = MLP((hidden_size, 3))
 optimizer = optimizers.SGD(lr).setup(model)
 data_size = len(x)  # 300
@@ -39,8 +42,9 @@ for epoch in range(max_epoch):
     # dataset iteration(300)
     for i in range(max_iter):
         batch_index = index[i * batch_size:(i + 1) * batch_size]  # 'batch_size' data
-        batch_x = x[batch_index]  # ndarray
-        batch_t = t[batch_index]  # ndarray
+        batch = [train_set[i] for i in batch_index]
+        batch_x = np.array([element[0] for element in batch])
+        batch_t = np.array([element[1] for element in batch])
     
         # forward
         y = model(batch_x)
@@ -55,4 +59,4 @@ for epoch in range(max_epoch):
         sum_loss += float(loss.data) * len(batch_t)
     
     avg_loss = sum_loss / data_size
-    print('epoch %d, loss %.2f' % (epoch+1, avg_loss))
+    print('epoch %d, loss %.5f' % (epoch+1, avg_loss))
