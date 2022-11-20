@@ -42,3 +42,19 @@ class Normalize:
             rshape[0] = len(array) if len(self.std) == 1 else len(self.std)
             std = np.array(self.std, dtype=array.dtype).reshape(*rshape)
         return (array - mean) / std
+
+class Flatten:
+    """Flatten a NumPy array.
+    """
+    def __call__(self, array):
+        return array.flatten()
+
+class AsType:
+    def __init__(self, dtype=np.float32):
+        self.dtype = dtype
+
+    def __call__(self, array):
+        return array.astype(self.dtype)
+
+
+ToFloat = AsType
