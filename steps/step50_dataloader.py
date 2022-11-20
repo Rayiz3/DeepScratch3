@@ -38,14 +38,11 @@ test_loader = DataLoader(test_set, batch_size, shuffle=False)
 
 model = MLP((hidden_size, 3))
 optimizer = optimizers.SGD(lr).setup(model)
-data_size = len(x)  # 300
-max_iter = math.ceil(data_size / batch_size) # 300 / 30 = 10
 
 for epoch in range(max_epoch):
     print('epoch: {}'.format(epoch+1))
     
     ## train section ##
-    index = np.random.permutation(data_size)  # shuffle
     sum_loss, sum_acc = 0, 0
     
     # dataset iteration(300)
