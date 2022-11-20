@@ -232,6 +232,15 @@ class SoftmaxCrossEntropy(Function):
 # =====================
 # Activation function
 # =====================
+class ReLU(Function):
+    def forward(self, x):
+        return np.maximum(x, 0.0)
+    
+    def backward(self, gy):
+        x, = self.inputs
+        mask = x.data > 0
+        return gy * mask
+
 class Sigmoid(Function):
     def forward(self, x):
         # xp = cuda.get_array_module(x)
@@ -320,6 +329,9 @@ def softmax_cross_entropy(x, t):
 
 def linear(x, W, b=None):
     return Linear()(x, W, b)
+
+def relu(x):
+    return ReLU()(x)
 
 def sigmoid(x):
     return Sigmoid()(x)
