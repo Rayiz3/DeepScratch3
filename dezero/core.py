@@ -2,7 +2,12 @@ import numpy as np
 import weakref
 import contextlib
 import dezero
-
+try:
+    import cupy
+    array_types = (np.ndarray, cupy.ndarray)
+except ImportError:
+    array_types = (np.ndarray)
+    
 class Config:  # for mode switching
     enable_backprop = True
 
@@ -24,7 +29,7 @@ class Variable:
     
     def __init__(self, data, name=None):
         # exception flow
-        if (data is not None) and (not isinstance(data, np.ndarray)):
+        if (data is not None) and (not isinstance(data, array_types)):
             raise TypeError("type {} is not supported.".format(type(data)))
         
         self.data = data
@@ -48,7 +53,8 @@ class Variable:
     
     def backward(self, retain_grad=False, create_graph=False):  # create_graph=False : do backpropagation only 'once'
         if self.grad is None: # if terminal variable (loss fuction value)
-            self.grad = Variable(np.ones_like(self.data)) # default grad = 1s (with same DT with self.data)
+            xp = dezero.cuda.get_array_module(self.data)  # np or cp
+            self.grad = Variable(xp.ones_like(self.data)) # default grad = 1s (with same DT with self.data)
         
         funcs = []
         seen_set = set()
@@ -96,6 +102,14 @@ class Variable:
     
     def sum(self, axis=None, keepdims=False):
         return dezero.functions.sum(self, axis, keepdims)  # to avoid circular import of functions module
+    
+    def to_cpu(self):
+        if self.data is not None:
+            self.data = dezero.cuda.as_numpy(self.data)
+            
+    def to_gpu(self):
+        if self.data is not None:
+            self.data = dezero.cuda.as_cupy(self.data)
     
     @property  # can use fuction as variable : x.shape
     def shape(self):
@@ -206,27 +220,27 @@ def neg(x):
     return Neg()(x)
 
 def add(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, dezero.cuda.get_array_module(x0.data))
     return Add()(x0, x1)
 
 def sub(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, dezero.cuda.get_array_module(x0.data))
     return Sub()(x0, x1)
 
 def rsub(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, dezero.cuda.get_array_module(x0.data))
     return Sub()(x1, x0)
 
 def mul(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, dezero.cuda.get_array_module(x0.data))
     return Mul()(x0, x1)
 
 def div(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, dezero.cuda.get_array_module(x0.data))
     return Div()(x0, x1)
 
 def rdiv(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, dezero.cuda.get_array_module(x0.data))
     return Div()(x1, x0)
 
 def pow(x, c):
@@ -245,9 +259,9 @@ def numerical_diff(f, x, eps=1e-4):
     return (y1.data - y0.data) / (2 * eps)
 
 # change (np.othertype) => (np.ndarray)
-def as_array(x):
+def as_array(x, array_module=np):
     if np.isscalar(x):
-        return np.array(x)
+        return array_module.array(x)
     return x
 
 # change (othertype) => (Variable)
