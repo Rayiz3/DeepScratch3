@@ -2,6 +2,7 @@ if '__file__' in globals():
     import os, sys
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))  # to find 'dezero' directory wherever execute a .py file
 
+import time
 import math
 import numpy as np
 import dezero
@@ -30,6 +31,7 @@ for epoch in range(max_epoch):
     print('epoch: {}'.format(epoch+1))
     
     ## train section ##
+    start = time.time()
     sum_loss, sum_acc = 0, 0
     
     # dataset iteration(300)
@@ -48,9 +50,10 @@ for epoch in range(max_epoch):
         sum_loss += float(loss.data) * len(t)
         sum_acc += float(acc.data) * len(t)
     
+    elapsed_time = time.time() - start
     avg_loss = sum_loss / len(train_set)
     avg_acc = sum_acc / len(train_set)
-    print('train loss: {:.4f}, accuracy: {:.4f}'.format(avg_loss, avg_acc))
+    print('train loss: {:.4f}, accuracy: {:.4f}, time: {:.4f}[sec]'.format(avg_loss, avg_acc, elapsed_time))
     
     ## test section ##
     sum_loss, sum_acc = 0, 0
