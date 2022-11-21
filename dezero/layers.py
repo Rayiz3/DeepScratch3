@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import dezero.functions as F
 from dezero.core import Parameter
@@ -44,6 +45,37 @@ class Layer:
     def to_gpu(self):
         for param in self.params():
             param.to_gpu()
+    
+    def _flatten_params(self, params_dict, parent_key=''):
+        for name in self._params:
+            obj = self.__dict__[name]
+            key = parent_key + '/' + name if parent_key else name
+            
+            if isinstance(obj, Layer):
+                obj._flatten_params(params_dict, key)
+            else:
+                params_dict[key] = obj
+    
+    def save_weight(self, path):
+        self.to_cpu()
+        
+        params_dict={}
+        self._flatten_params(params_dict)  # {key : Variable}
+        array_dict = {key : param.data for key, param in params_dict.items() if param is not None}  # {key : ndarray}
+        
+        try:
+            np.savez_compressed(path, **array_dict)
+        except (Exception, KeyboardInterrupt) as e:  # exceptional flow for user interrupt (ctrl + c)
+            if os.path.exists(path):
+                os.remove(path)
+            raise
+    
+    def load_weight(self, path):
+        npz = np.load(path)
+        params_dict = {}
+        self._flatten_params(params_dict)
+        for key, param in params_dict.items():
+            param.data = npz[key]
     
 class Linear(Layer):
     def __init__(self, out_size, nobias=False, dtype=np.float32, in_size=None):
