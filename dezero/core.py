@@ -10,6 +10,7 @@ except ImportError:
     
 class Config:  # for mode switching
     enable_backprop = True
+    train = True
 
 @contextlib.contextmanager  # provide context : preprocessing ~ yield ~ postprocessing
 def using_config(name, value):
@@ -23,6 +24,9 @@ def using_config(name, value):
     # postprocessing
         setattr(Config, name, old_value)  # Config.name = old_value
     # postprocessing
+
+def test_mode():
+    return using_config('train', False)
 
 class Variable:
     __array_priority__ = 200  # prevented : for operation with (ndarray * Variable), ndarray.__mul__ is applied at first
