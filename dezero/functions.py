@@ -1,12 +1,21 @@
 import numpy as np
 import dezero
-from dezero import utils, cuda
+from dezero import utils, cuda, functions_conv
 from dezero.core import Function, as_variable, as_array
 
 
 # =====================
 # Basic function
 # =====================
+from dezero.core import add
+from dezero.core import sub
+from dezero.core import rsub
+from dezero.core import mul
+from dezero.core import div
+from dezero.core import neg
+from dezero.core import pow
+
+
 class Sin(Function):
     def forward(self, x):
         xp = cuda.get_array_module(x)
@@ -374,3 +383,12 @@ def dropout(x, dropout_ratio=0.5):
         return x * mask / scale
     else:
         return x
+
+# =============================================================================
+# conv2d / col2im / im2col / basic_math
+# =============================================================================
+from dezero.functions_conv import conv2d
+from dezero.functions_conv import deconv2d
+from dezero.functions_conv import im2col
+from dezero.functions_conv import col2im
+from dezero.functions_conv import pooling
