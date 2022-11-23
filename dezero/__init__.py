@@ -23,6 +23,7 @@ else:
     from dezero.dataloaders import DataLoader
     
     import dezero.functions
+    import dezero.functions_conv
     import dezero.utils
     import dezero.datasets
     import dezero.transforms
