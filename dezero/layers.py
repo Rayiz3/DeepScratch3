@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import dezero.functions as F
+from dezero import cuda
+from dezero.utils import pair
 from dezero.core import Parameter
 import weakref
 
