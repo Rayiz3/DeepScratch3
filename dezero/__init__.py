@@ -12,6 +12,7 @@ else:
     from dezero.core import Config
     from dezero.core import Variable
     from dezero.core import Function
+    from dezero.core import Parameter
     from dezero.core import using_config
     from dezero.core import test_mode
     from dezero.core import no_grad
@@ -25,7 +26,10 @@ else:
     import dezero.functions
     import dezero.functions_conv
     import dezero.utils
+    import dezero.layers
+    import dezero.optimizers
     import dezero.datasets
     import dezero.transforms
+    import dezero.cuda
 
 setup_variable()
