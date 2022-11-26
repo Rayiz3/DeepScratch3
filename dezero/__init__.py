@@ -29,6 +29,7 @@ else:
     import dezero.layers
     import dezero.optimizers
     import dezero.datasets
+    import dezero.dataloaders
     import dezero.transforms
     import dezero.cuda
 
