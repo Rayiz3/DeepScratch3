@@ -73,7 +73,7 @@ class Variable:
         
         while funcs:
             f = funcs.pop()
-            xs, ys = f.inputs, [output() for output in f.outputs]
+            xs, ys = f.inputs, [output() for output in f.outputs]  # output() : weak reference
             gys = [y.grad for y in ys]
             
             with using_config('enable_backprop', create_graph):  # mode switching inside function
